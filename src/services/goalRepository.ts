@@ -186,6 +186,32 @@ function ensureUserSeedLocal(db: LocalDatabase, userId: string, email: string, f
 }
 
 // ============================================================================
+// Tradução de mensagens do Supabase Auth para Português
+// ============================================================================
+export function translateSupabaseAuthError(message: string): string {
+  const normalized = (message || '').toLowerCase();
+  if (normalized.includes('email not confirmed')) {
+    return 'Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada (e spam) e clique no link de confirmação.';
+  }
+  if (normalized.includes('invalid login credentials')) {
+    return 'E-mail ou senha incorretos.';
+  }
+  if (normalized.includes('user already registered') || normalized.includes('already been registered')) {
+    return 'Já existe uma conta cadastrada com este e-mail.';
+  }
+  if (normalized.includes('password should be at least')) {
+    return 'A senha deve ter pelo menos 6 caracteres.';
+  }
+  if (normalized.includes('email rate limit exceeded') || normalized.includes('over_email_send_rate_limit')) {
+    return 'Muitas tentativas de envio de e-mail em pouco tempo. Aguarde alguns minutos e tente novamente.';
+  }
+  if (normalized.includes('for security purposes, you can only request this after')) {
+    return 'Por segurança, aguarde alguns segundos antes de solicitar um novo envio.';
+  }
+  return message;
+}
+
+// ============================================================================
 // Repositório Unificado (Supabase Real + Adaptador Persistente Local)
 // ============================================================================
 export const goalRepository = {
@@ -225,7 +251,13 @@ export const goalRepository = {
     email: string;
     password: string;
     full_name: string;
-  }): Promise<{ id: string; email: string; full_name: string }> {
+  }): Promise<{
+    id: string;
+    email: string;
+    full_name: string;
+    user: { id: string; email: string; full_name: string };
+    requiresEmailConfirmation: boolean;
+  }> {
     const cleanEmail = input.email.trim().toLowerCase();
     const cleanName = input.full_name.trim();
 
@@ -234,19 +266,37 @@ export const goalRepository = {
         email: cleanEmail,
         password: input.password,
         options: {
+          emailRedirectTo: `${window.location.origin}`,
           data: {
             full_name: cleanName,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo',
           },
         },
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(translateSupabaseAuthError(error.message));
       if (!data.user) throw new Error('Não foi possível concluir o cadastro.');
-      await this.ensureRemoteSeed(data.user.id, cleanEmail, cleanName);
-      return {
+
+      const authUser = {
         id: data.user.id,
         email: cleanEmail,
         full_name: cleanName,
+      };
+
+      if (data.session) {
+        await this.ensureRemoteSeed(data.user.id, cleanEmail, cleanName);
+        return {
+          ...authUser,
+          user: authUser,
+          requiresEmailConfirmation: false,
+        };
+      }
+
+      // Quando data.session é null (mailer_autoconfirm: false), o trigger SQL handle_new_user
+      // já criou profiles, activity_categories e notification_preferences com SECURITY DEFINER.
+      return {
+        ...authUser,
+        user: authUser,
+        requiresEmailConfirmation: true,
       };
     }
 
@@ -269,10 +319,16 @@ export const goalRepository = {
     ensureUserSeedLocal(db, newUser.id, newUser.email, newUser.full_name);
     saveLocalDb(db);
 
-    return {
+    const authUser = {
       id: newUser.id,
       email: newUser.email,
       full_name: newUser.full_name,
+    };
+
+    return {
+      ...authUser,
+      user: authUser,
+      requiresEmailConfirmation: false,
     };
   },
 
@@ -287,11 +343,12 @@ export const goalRepository = {
         email: cleanEmail,
         password: input.password,
       });
-      if (error) throw new Error(error.message);
-      if (!data.user) throw new Error('Credenciais inválidas.');
+      if (error) throw new Error(translateSupabaseAuthError(error.message));
+      if (!data.user) throw new Error('E-mail ou senha incorretos.');
       const fullName =
         (data.user.user_metadata?.full_name as string) || cleanEmail.split('@')[0] || 'Usuário';
       await this.ensureRemoteSeed(data.user.id, cleanEmail, fullName);
+      await this.touchProfileActivity(data.user.id);
       return {
         id: data.user.id,
         email: cleanEmail,
@@ -302,15 +359,19 @@ export const goalRepository = {
     const db = loadLocalDb();
     const user = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
     if (!user) {
-      throw new Error('E-mail não encontrado. Crie sua conta primeiro.');
+      throw new Error('E-mail ou senha incorretos.');
     }
     const encodedPass = btoa(encodeURIComponent(input.password));
     if (user.passwordHash !== encodedPass) {
-      throw new Error('Senha incorreta. Verifique suas credenciais.');
+      throw new Error('E-mail ou senha incorretos.');
     }
 
     db.currentSessionUserId = user.id;
     ensureUserSeedLocal(db, user.id, user.email, user.full_name);
+    const pIdx = db.profiles.findIndex((p) => p.id === user.id);
+    if (pIdx !== -1) {
+      db.profiles[pIdx].updated_at = new Date().toISOString();
+    }
     saveLocalDb(db);
 
     return {
@@ -320,10 +381,28 @@ export const goalRepository = {
     };
   },
 
+  async touchProfileActivity(userId: string): Promise<void> {
+    const now = new Date().toISOString();
+    if (this.isRemote() && supabase) {
+      await supabase
+        .from('profiles')
+        .update({ updated_at: now })
+        .eq('id', userId);
+      return;
+    }
+
+    const db = loadLocalDb();
+    const idx = db.profiles.findIndex((p) => p.id === userId);
+    if (idx !== -1) {
+      db.profiles[idx].updated_at = now;
+      saveLocalDb(db);
+    }
+  },
+
   async signOut(): Promise<void> {
     if (this.isRemote() && supabase) {
       const { error } = await supabase.auth.signOut();
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(translateSupabaseAuthError(error.message));
       return;
     }
     const db = loadLocalDb();
@@ -336,9 +415,9 @@ export const goalRepository = {
 
     if (this.isRemote() && supabase) {
       const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}`,
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(translateSupabaseAuthError(error.message));
       return 'Enviamos um link de redefinição de senha para o seu e-mail.';
     }
 

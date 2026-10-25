@@ -78,8 +78,17 @@ export const AuthPage: React.FC = () => {
   const handleRegister = async (values: RegisterValues) => {
     setIsSubmitting(true);
     setErrorMsg(null);
+    setSuccessMsg(null);
     try {
-      await signUp(values.full_name, values.email, values.password);
+      const result = await signUp(values.full_name, values.email, values.password);
+      if (result.requiresEmailConfirmation) {
+        loginForm.setValue('email', values.email);
+        registerForm.reset();
+        setMode('login');
+        setSuccessMsg(
+          'Cadastro realizado com sucesso! Enviamos um link de confirmação para o seu e-mail. Confirme seu e-mail e faça login para continuar.'
+        );
+      }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Erro ao criar conta.');
     } finally {

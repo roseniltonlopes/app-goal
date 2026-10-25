@@ -16,7 +16,11 @@ interface AuthContextValue {
   isLoading: boolean;
   isRemoteSupabase: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (fullName: string, email: string, password: string) => Promise<void>;
+  signUp: (
+    fullName: string,
+    email: string,
+    password: string
+  ) => Promise<{ requiresEmailConfirmation: boolean }>;
   signOut: () => Promise<void>;
   updateUserProfile: (
     updates: Partial<Pick<Profile, 'full_name' | 'theme' | 'timezone' | 'week_starts_on'>>
@@ -40,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       setUser(sessionUser);
+      await goalRepository.touchProfileActivity(sessionUser.id);
       const userProfile = await goalRepository.getProfile(sessionUser.id);
       setProfile(userProfile);
       if (userProfile.theme === 'dark' || userProfile.theme === 'light') {
@@ -77,14 +82,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (fullName: string, email: string, password: string) => {
-    const authUser = await goalRepository.signUp({ full_name: fullName, email, password });
-    setUser(authUser);
-    const userProfile = await goalRepository.getProfile(authUser.id);
+  const signUp = async (
+    fullName: string,
+    email: string,
+    password: string
+  ): Promise<{ requiresEmailConfirmation: boolean }> => {
+    const result = await goalRepository.signUp({ full_name: fullName, email, password });
+    if (result.requiresEmailConfirmation) {
+      return { requiresEmailConfirmation: true };
+    }
+    setUser(result.user);
+    const userProfile = await goalRepository.getProfile(result.user.id);
     setProfile(userProfile);
     if (userProfile.theme) {
       setTheme(userProfile.theme as ThemeMode);
     }
+    return { requiresEmailConfirmation: false };
   };
 
   const signOut = async () => {
