@@ -3,6 +3,11 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 export const RUNTIME_SUPABASE_URL_KEY = 'goal_runtime_supabase_url';
 export const RUNTIME_SUPABASE_ANON_KEY = 'goal_runtime_supabase_anon_key';
 
+// Credenciais públicas (anon) do projeto Supabase oficial do GOAL (protegido por RLS)
+export const DEFAULT_PROJECT_SUPABASE_URL = 'https://xkilcwryxdpkwocozotj.supabase.co';
+export const DEFAULT_PROJECT_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraWxjd3J5eGRwa3dvY296b3RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NTM5NzAsImV4cCI6MjEwODUyOTk3MH0.5moZ21ptBENIRXQ62xlipCHYPKtLeh2I_JfKiwPJf_Y';
+
 function getSafeLocalStorage(key: string): string {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
@@ -19,6 +24,11 @@ export function getActiveSupabaseConfig(): {
   anonKey: string;
   source: 'runtime' | 'env' | 'none';
 } {
+  // Envitando conectar ao Supabase real durante a execução de testes unitários no Vitest
+  if (typeof process !== 'undefined' && process.env?.VITEST) {
+    return { url: '', anonKey: '', source: 'none' };
+  }
+
   const runtimeUrl = getSafeLocalStorage(RUNTIME_SUPABASE_URL_KEY);
   const runtimeKey = getSafeLocalStorage(RUNTIME_SUPABASE_ANON_KEY);
 
@@ -31,8 +41,12 @@ export function getActiveSupabaseConfig(): {
     return { url: runtimeUrl, anonKey: runtimeKey, source: 'runtime' };
   }
 
-  const envUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim() || '';
-  const envKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim() || '';
+  const envUrl =
+    (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim() ||
+    DEFAULT_PROJECT_SUPABASE_URL;
+  const envKey =
+    (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim() ||
+    DEFAULT_PROJECT_SUPABASE_ANON_KEY;
 
   if (
     envUrl &&
