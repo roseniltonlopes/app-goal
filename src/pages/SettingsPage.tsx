@@ -55,45 +55,57 @@ export const SettingsPage: React.FC = () => {
   // Estado Categorias
   const [editingCategory, setEditingCategory] = useState<ActivityCategory | null>(null);
   const [catName, setCatName] = useState('');
-  const [catIcon, setCatIcon] = useState('Briefcase');
-  const [catStyle, setCatStyle] = useState<CategoryVisualStyle>('solid');
+  const [catIcon, setCatIcon] = useState('');
+  const [catStyle, setCatStyle] = useState<string>('');
+  const [catError, setCatError] = useState<string | null>(null);
 
   // Estado WhatsApp
-  const [phoneCountryCode, setPhoneCountryCode] = useState('+55');
+  const [phoneCountryCode, setPhoneCountryCode] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [whatsappEnabled, setWhatsappEnabled] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
   const [optedOut, setOptedOut] = useState(false);
-  const [defaultReminderMinutes, setDefaultReminderMinutes] = useState(15);
+  const [defaultReminderMinutes, setDefaultReminderMinutes] = useState<string | number>('');
   const [dailySummaryEnabled, setDailySummaryEnabled] = useState(false);
-  const [dailySummaryTime, setDailySummaryTime] = useState('07:00');
-  const [quietHoursEnabled, setQuietHoursEnabled] = useState(true);
-  const [quietHoursStart, setQuietHoursStart] = useState('22:00');
-  const [quietHoursEnd, setQuietHoursEnd] = useState('07:00');
+  const [dailySummaryTime, setDailySummaryTime] = useState('');
+  const [quietHoursEnabled, setQuietHoursEnabled] = useState(false);
+  const [quietHoursStart, setQuietHoursStart] = useState('');
+  const [quietHoursEnd, setQuietHoursEnd] = useState('');
   const [isSavingWhatsApp, setIsSavingWhatsApp] = useState(false);
   const [isTriggeringCheck, setIsTriggeringCheck] = useState(false);
 
   useEffect(() => {
     if (profile) {
       setFullName(profile.full_name);
-      setTimezone(profile.timezone || 'America/Sao_Paulo');
+      setTimezone(profile.timezone || '');
       setWeekStartsOn(profile.week_starts_on ?? 1);
     }
   }, [profile]);
 
   useEffect(() => {
     if (notificationPreferences) {
-      setPhoneCountryCode(notificationPreferences.phone_country_code || '+55');
+      const hasPhoneSaved = Boolean(notificationPreferences.phone_number);
+      setPhoneCountryCode(hasPhoneSaved ? notificationPreferences.phone_country_code : '');
       setPhoneNumber(notificationPreferences.phone_number || '');
       setWhatsappEnabled(notificationPreferences.whatsapp_enabled);
       setConsentGiven(notificationPreferences.consent_given);
       setOptedOut(notificationPreferences.opted_out);
-      setDefaultReminderMinutes(notificationPreferences.default_reminder_minutes || 15);
+      setDefaultReminderMinutes(
+        hasPhoneSaved ? notificationPreferences.default_reminder_minutes : ''
+      );
       setDailySummaryEnabled(notificationPreferences.daily_summary_enabled);
-      setDailySummaryTime(notificationPreferences.daily_summary_time || '07:00');
-      setQuietHoursEnabled(notificationPreferences.quiet_hours_enabled);
-      setQuietHoursStart(notificationPreferences.quiet_hours_start || '22:00');
-      setQuietHoursEnd(notificationPreferences.quiet_hours_end || '07:00');
+      setDailySummaryTime(
+        notificationPreferences.daily_summary_enabled
+          ? notificationPreferences.daily_summary_time
+          : ''
+      );
+      setQuietHoursEnabled(
+        hasPhoneSaved ? notificationPreferences.quiet_hours_enabled : false
+      );
+      setQuietHoursStart(
+        hasPhoneSaved ? notificationPreferences.quiet_hours_start : ''
+      );
+      setQuietHoursEnd(hasPhoneSaved ? notificationPreferences.quiet_hours_end : '');
     }
   }, [notificationPreferences]);
 
@@ -134,24 +146,37 @@ export const SettingsPage: React.FC = () => {
 
   const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!catName.trim()) return;
+    if (!catName.trim()) {
+      setCatError('Informe o nome da categoria.');
+      return;
+    }
+    if (!catIcon) {
+      setCatError('Selecione um ícone representativo.');
+      return;
+    }
+    if (!catStyle) {
+      setCatError('Selecione a preferência visual.');
+      return;
+    }
+    setCatError(null);
+    const resolvedStyle = catStyle as CategoryVisualStyle;
     if (editingCategory) {
       await updateCategory(editingCategory.id, {
         name: catName,
         icon: catIcon,
-        visual_style: catStyle,
+        visual_style: resolvedStyle,
       });
       setEditingCategory(null);
     } else {
       await createCategory({
         name: catName,
         icon: catIcon,
-        visual_style: catStyle,
+        visual_style: resolvedStyle,
       });
     }
     setCatName('');
-    setCatIcon('Briefcase');
-    setCatStyle('solid');
+    setCatIcon('');
+    setCatStyle('');
   };
 
   const startEditCategory = (cat: ActivityCategory) => {
@@ -159,26 +184,26 @@ export const SettingsPage: React.FC = () => {
     setCatName(cat.name);
     setCatIcon(cat.icon);
     setCatStyle(cat.visual_style);
+    setCatError(null);
   };
 
   const handleSaveWhatsApp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSavingWhatsApp(true);
     try {
+      const resolvedDdi = (phoneCountryCode || '+55').trim();
       await saveNotificationPreferences({
-        phone_country_code: phoneCountryCode.startsWith('+')
-          ? phoneCountryCode
-          : `+${phoneCountryCode}`,
+        phone_country_code: resolvedDdi.startsWith('+') ? resolvedDdi : `+${resolvedDdi}`,
         phone_number: phoneNumber.replace(/\D/g, ''),
         whatsapp_enabled: optedOut ? false : whatsappEnabled,
         consent_given: consentGiven,
         opted_out: optedOut,
-        default_reminder_minutes: Number(defaultReminderMinutes),
+        default_reminder_minutes: Number(defaultReminderMinutes) || 15,
         daily_summary_enabled: dailySummaryEnabled,
-        daily_summary_time: dailySummaryTime,
+        daily_summary_time: dailySummaryTime || '07:00',
         quiet_hours_enabled: quietHoursEnabled,
-        quiet_hours_start: quietHoursStart,
-        quiet_hours_end: quietHoursEnd,
+        quiet_hours_start: quietHoursStart || '22:00',
+        quiet_hours_end: quietHoursEnd || '07:00',
       });
     } finally {
       setIsSavingWhatsApp(false);
@@ -295,6 +320,7 @@ export const SettingsPage: React.FC = () => {
               </label>
               <GoalSelect
                 id="prof-tz"
+                placeholder="Selecione seu fuso horário..."
                 value={timezone}
                 onChange={(val) => setTimezone(val)}
                 options={[
@@ -314,10 +340,11 @@ export const SettingsPage: React.FC = () => {
               </label>
               <GoalSelect
                 id="prof-week"
+                placeholder="Selecione o dia inicial..."
                 value={weekStartsOn}
                 onChange={(val) => setWeekStartsOn(Number(val) as 0 | 1)}
                 options={[
-                  { value: 1, label: 'Segunda-feira (Padrão)' },
+                  { value: 1, label: 'Segunda-feira' },
                   { value: 0, label: 'Domingo' },
                 ]}
               />
@@ -471,12 +498,13 @@ export const SettingsPage: React.FC = () => {
 
             <div>
               <label htmlFor="cat-style" className="block text-xs font-medium text-text-secondary mb-1">
-                Preferência visual (Monocromática)
+                Preferência visual (Monocromática) *
               </label>
               <GoalSelect
                 id="cat-style"
+                placeholder="Selecione o estilo visual..."
                 value={catStyle}
-                onChange={(val) => setCatStyle(val as CategoryVisualStyle)}
+                onChange={(val) => setCatStyle(val)}
                 options={[
                   { value: 'solid', label: 'Sólido (Alto contraste)' },
                   { value: 'outline', label: 'Contorno (Minimalista)' },
@@ -486,6 +514,10 @@ export const SettingsPage: React.FC = () => {
               />
             </div>
 
+            {catError && (
+              <p className="text-xs font-medium text-text-primary">⚠ {catError}</p>
+            )}
+
             <div className="flex items-center gap-2 pt-2">
               {editingCategory && (
                 <button
@@ -493,6 +525,9 @@ export const SettingsPage: React.FC = () => {
                   onClick={() => {
                     setEditingCategory(null);
                     setCatName('');
+                    setCatIcon('');
+                    setCatStyle('');
+                    setCatError(null);
                   }}
                   className="px-4 py-2 rounded-xl border border-border-subtle text-xs text-text-secondary"
                 >
@@ -658,6 +693,7 @@ export const SettingsPage: React.FC = () => {
                 </label>
                 <GoalSelect
                   id="wa-advance"
+                  placeholder="Selecione a antecedência..."
                   value={defaultReminderMinutes}
                   onChange={(val) => setDefaultReminderMinutes(Number(val))}
                   options={[

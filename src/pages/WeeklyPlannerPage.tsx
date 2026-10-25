@@ -64,8 +64,8 @@ export const WeeklyPlannerPage: React.FC = () => {
     setActivityStatus,
   } = useGoalData();
 
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const [viewMode, setViewMode] = useState<'columns' | 'timegrid'>('columns');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -82,8 +82,9 @@ export const WeeklyPlannerPage: React.FC = () => {
 
   const filteredActivities = useMemo(() => {
     return weekActivities.filter((act) => {
-      if (categoryFilter !== 'all' && act.category_id !== categoryFilter) return false;
-      if (statusFilter !== 'all' && act.status !== statusFilter) return false;
+      if (categoryFilter && categoryFilter !== 'all' && act.category_id !== categoryFilter)
+        return false;
+      if (statusFilter && statusFilter !== 'all' && act.status !== statusFilter) return false;
       return true;
     });
   }, [weekActivities, categoryFilter, statusFilter]);
@@ -199,7 +200,13 @@ export const WeeklyPlannerPage: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => openCreateAtSlot(todayISO, '08:00')}
+            onClick={() => {
+              setEditingActivity(null);
+              setModalInitialDate(undefined);
+              setModalInitialStart('');
+              setModalInitialEnd('');
+              setIsModalOpen(true);
+            }}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-text-primary text-bg-primary text-xs font-semibold hover:opacity-90"
           >
             <Plus className="w-4 h-4" />
@@ -218,12 +225,15 @@ export const WeeklyPlannerPage: React.FC = () => {
 
           <GoalSelect
             ariaLabel="Filtrar por categoria"
+            placeholder="Filtrar por categoria..."
             size="sm"
             value={categoryFilter}
             onChange={(val) => setCategoryFilter(val)}
             className="min-w-[200px]"
             options={[
-              { value: 'all', label: 'Todas as categorias', icon: 'Layers' },
+              ...(categoryFilter
+                ? [{ value: '', label: 'Limpar filtro (Todas)', icon: 'Layers' }]
+                : []),
               ...categories.map((cat) => ({
                 value: cat.id,
                 label: cat.name,
@@ -234,12 +244,13 @@ export const WeeklyPlannerPage: React.FC = () => {
 
           <GoalSelect
             ariaLabel="Filtrar por status"
+            placeholder="Filtrar por status..."
             size="sm"
             value={statusFilter}
             onChange={(val) => setStatusFilter(val)}
-            className="min-w-[165px]"
+            className="min-w-[175px]"
             options={[
-              { value: 'all', label: 'Todos os status' },
+              ...(statusFilter ? [{ value: '', label: 'Limpar filtro (Todos)' }] : []),
               { value: 'pending', label: 'Pendentes' },
               { value: 'completed', label: 'Concluídas' },
               { value: 'missed', label: 'Não realizadas' },

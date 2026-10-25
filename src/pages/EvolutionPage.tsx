@@ -77,9 +77,9 @@ export const EvolutionPage: React.FC = () => {
     defaultValues: {
       title: '',
       category_id: '',
-      goal_type: 'frequency',
-      target_value: 4,
-      unit: 'vezes',
+      goal_type: '',
+      target_value: undefined as unknown as number,
+      unit: '',
       description: '',
     },
   });
@@ -91,10 +91,10 @@ export const EvolutionPage: React.FC = () => {
     setEditingGoal(null);
     reset({
       title: '',
-      category_id: categories[0]?.id || '',
-      goal_type: 'frequency',
-      target_value: 4,
-      unit: 'vezes',
+      category_id: '',
+      goal_type: '',
+      target_value: '' as unknown as number,
+      unit: '',
       description: '',
     });
     setIsGoalModalOpen(true);
@@ -114,11 +114,15 @@ export const EvolutionPage: React.FC = () => {
   };
 
   const onSubmitGoal = async (values: WeeklyGoalFormValues) => {
+    const resolvedGoalType = (values.goal_type || 'frequency') as
+      | 'frequency'
+      | 'duration'
+      | 'quantity';
     if (editingGoal) {
       await updateWeeklyGoal(editingGoal.id, {
         title: values.title,
         category_id: values.category_id || undefined,
-        goal_type: values.goal_type,
+        goal_type: resolvedGoalType,
         target_value: values.target_value,
         unit: values.unit,
         description: values.description,
@@ -127,7 +131,7 @@ export const EvolutionPage: React.FC = () => {
       await createWeeklyGoal({
         title: values.title,
         category_id: values.category_id || undefined,
-        goal_type: values.goal_type,
+        goal_type: resolvedGoalType,
         target_value: values.target_value,
         unit: values.unit,
         description: values.description,
@@ -488,10 +492,13 @@ export const EvolutionPage: React.FC = () => {
                 </label>
                 <GoalSelect
                   id="goal-cat"
+                  placeholder="Selecione uma categoria (ou deixe em branco para geral)..."
                   value={watchedGoalCategoryId}
                   onChange={(val) => setValue('category_id', val)}
                   options={[
-                    { value: '', label: 'Todas as categorias (Geral)', icon: 'Layers' },
+                    ...(watchedGoalCategoryId
+                      ? [{ value: '', label: 'Limpar seleção (Geral)', icon: 'Layers' }]
+                      : []),
                     ...categories.map((c) => ({
                       value: c.id,
                       label: c.name,
@@ -504,17 +511,17 @@ export const EvolutionPage: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label htmlFor="goal-type" className="block text-xs font-medium text-text-secondary mb-1">
-                    Tipo de meta
+                    Tipo de meta *
                   </label>
                   <GoalSelect
                     id="goal-type"
+                    placeholder="Selecione..."
                     value={watchedGoalType}
                     onChange={(val) => {
-                      const typedVal = val as 'frequency' | 'duration' | 'quantity';
-                      setValue('goal_type', typedVal);
-                      if (typedVal === 'frequency') setValue('unit', 'vezes');
-                      if (typedVal === 'duration') setValue('unit', 'horas');
-                      if (typedVal === 'quantity') setValue('unit', 'sessões');
+                      setValue('goal_type', val, { shouldValidate: true });
+                      if (val === 'frequency') setValue('unit', 'vezes');
+                      if (val === 'duration') setValue('unit', 'horas');
+                      if (val === 'quantity') setValue('unit', 'sessões');
                     }}
                     options={[
                       { value: 'frequency', label: 'Frequência' },
@@ -522,6 +529,9 @@ export const EvolutionPage: React.FC = () => {
                       { value: 'quantity', label: 'Quantidade' },
                     ]}
                   />
+                  {errors.goal_type && (
+                    <p className="text-xs text-text-primary mt-1">⚠ {errors.goal_type.message}</p>
+                  )}
                 </div>
 
                 <div>
@@ -531,10 +541,16 @@ export const EvolutionPage: React.FC = () => {
                   <input
                     id="goal-target"
                     type="number"
+                    placeholder="Ex: 4"
                     step={watchedGoalType === 'duration' ? '0.5' : '1'}
                     {...register('target_value')}
                     className="w-full px-3 py-2.5 rounded-xl bg-bg-secondary border border-border-subtle text-xs text-text-primary"
                   />
+                  {errors.target_value && (
+                    <p className="text-xs text-text-primary mt-1">
+                      ⚠ {errors.target_value.message}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -544,9 +560,13 @@ export const EvolutionPage: React.FC = () => {
                   <input
                     id="goal-unit"
                     type="text"
+                    placeholder="Ex: vezes, horas"
                     {...register('unit')}
                     className="w-full px-3 py-2.5 rounded-xl bg-bg-secondary border border-border-subtle text-xs text-text-primary"
                   />
+                  {errors.unit && (
+                    <p className="text-xs text-text-primary mt-1">⚠ {errors.unit.message}</p>
+                  )}
                 </div>
               </div>
 

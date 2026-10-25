@@ -41,7 +41,10 @@ export const GoalSelect: React.FC<GoalSelectProps> = ({
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const selectedOption = options.find((opt) => String(opt.value) === String(value));
+  const hasValue = value !== '' && value !== undefined && value !== null;
+  const selectedOption = hasValue
+    ? options.find((opt) => String(opt.value) === String(value))
+    : undefined;
 
   // Fecha ao clicar fora
   useEffect(() => {
@@ -127,7 +130,12 @@ export const GoalSelect: React.FC<GoalSelectProps> = ({
               className="w-3.5 h-3.5 shrink-0 text-text-secondary"
             />
           )}
-          <span className="truncate font-medium">
+          <span
+            className={cn(
+              'truncate',
+              selectedOption ? 'font-medium text-text-primary' : 'text-text-secondary'
+            )}
+          >
             {selectedOption ? selectedOption.label : placeholder}
           </span>
         </span>
@@ -151,7 +159,7 @@ export const GoalSelect: React.FC<GoalSelectProps> = ({
           )}
         >
           {options.map((opt, idx) => {
-            const isSelected = String(opt.value) === String(value);
+            const isSelected = hasValue && String(opt.value) === String(value);
             const isHighlighted = idx === highlightedIndex;
 
             return (

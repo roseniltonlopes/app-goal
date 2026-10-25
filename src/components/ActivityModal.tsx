@@ -38,23 +38,19 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   onClose,
   editingActivity,
   initialDateISO,
-  initialStartTime = '08:00',
-  initialEndTime = '09:00',
+  initialStartTime = '',
+  initialEndTime = '',
 }) => {
   const {
     categories,
     templates,
     historyActivities,
-    notificationPreferences,
     createActivity,
     updateActivity,
   } = useGoalData();
 
   const [editScope, setEditScope] = useState<'single' | 'series'>('single');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const defaultCategoryId = categories[0]?.id || '';
-  const defaultReminderMinutes = notificationPreferences?.default_reminder_minutes ?? 15;
 
   const {
     register,
@@ -67,17 +63,17 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
     resolver: zodResolver(activityFormSchema),
     defaultValues: {
       title: '',
-      category_id: defaultCategoryId,
-      scheduled_date: initialDateISO || new Date().toISOString().slice(0, 10),
+      category_id: '',
+      scheduled_date: initialDateISO || '',
       start_time: initialStartTime,
       end_time: initialEndTime,
       description: '',
-      activity_type: 'fixed',
+      activity_type: '',
       is_recurring: false,
       days_of_week: [],
       recurrence_end_date: '',
       reminder_enabled: false,
-      reminder_minutes_before: defaultReminderMinutes,
+      reminder_minutes_before: 15,
     },
   });
 
@@ -91,7 +87,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
 
       reset({
         title: editingActivity.title,
-        category_id: editingActivity.category_id || defaultCategoryId,
+        category_id: editingActivity.category_id || '',
         scheduled_date: editingActivity.scheduled_date,
         start_time: editingActivity.start_time.slice(0, 5),
         end_time: editingActivity.end_time.slice(0, 5),
@@ -107,20 +103,19 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
       });
       setEditScope('single');
     } else {
-      const targetDate = initialDateISO || new Date().toISOString().slice(0, 10);
       reset({
         title: '',
-        category_id: categories[0]?.id || '',
-        scheduled_date: targetDate,
-        start_time: initialStartTime,
-        end_time: initialEndTime,
+        category_id: '',
+        scheduled_date: initialDateISO || '',
+        start_time: initialStartTime || '',
+        end_time: initialEndTime || '',
         description: '',
-        activity_type: 'fixed',
+        activity_type: '',
         is_recurring: false,
-        days_of_week: [getDay(parseISO(targetDate))],
+        days_of_week: [],
         recurrence_end_date: '',
-        reminder_enabled: Boolean(notificationPreferences?.whatsapp_enabled),
-        reminder_minutes_before: defaultReminderMinutes,
+        reminder_enabled: false,
+        reminder_minutes_before: 15,
       });
     }
   }, [
@@ -129,11 +124,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
     initialDateISO,
     initialStartTime,
     initialEndTime,
-    categories,
     templates,
-    defaultCategoryId,
-    defaultReminderMinutes,
-    notificationPreferences,
     reset,
   ]);
 
@@ -149,17 +140,23 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   const watchedReminder = watch('reminder_enabled');
   const watchedReminderMinutes = watch('reminder_minutes_before');
 
-  const durationMinutes = calculateDurationMinutes(watchedStart || '00:00', watchedEnd || '00:00');
+  const hasTimeFilled = Boolean(watchedStart && watchedEnd);
+  const durationMinutes = hasTimeFilled
+    ? calculateDurationMinutes(watchedStart, watchedEnd)
+    : 0;
 
-  const overlaps = detectTimeOverlaps(
-    {
-      id: editingActivity?.id,
-      scheduled_date: watchedDate,
-      start_time: watchedStart || '00:00',
-      end_time: watchedEnd || '00:00',
-    },
-    historyActivities
-  );
+  const overlaps =
+    watchedDate && watchedStart && watchedEnd
+      ? detectTimeOverlaps(
+          {
+            id: editingActivity?.id,
+            scheduled_date: watchedDate,
+            start_time: watchedStart,
+            end_time: watchedEnd,
+          },
+          historyActivities
+        )
+      : [];
 
   const toggleDayOfWeek = (dayValue: number) => {
     const current = new Set(watchedDays);
@@ -174,6 +171,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   const onSubmit = async (values: ActivityFormValues) => {
     setIsSubmitting(true);
     try {
+      const resolvedType = (values.activity_type || 'fixed') as 'fixed' | 'flexible' | 'habit';
       if (editingActivity) {
         await updateActivity(
           editingActivity.id,
@@ -184,7 +182,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
             start_time: values.start_time,
             end_time: values.end_time,
             description: values.description,
-            activity_type: values.activity_type,
+            activity_type: resolvedType,
             days_of_week: values.days_of_week,
             recurrence_end_date: values.recurrence_end_date,
             reminder_enabled: values.reminder_enabled,
@@ -200,7 +198,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
           start_time: values.start_time,
           end_time: values.end_time,
           description: values.description,
-          activity_type: values.activity_type,
+          activity_type: resolvedType,
           is_recurring: values.is_recurring,
           days_of_week: values.days_of_week,
           recurrence_end_date: values.recurrence_end_date,
@@ -304,6 +302,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               </label>
               <GoalSelect
                 id="act-category"
+                placeholder="Selecione uma categoria..."
                 value={watchedCategoryId}
                 onChange={(val) => setValue('category_id', val, { shouldValidate: true })}
                 options={categories.map((cat) => ({
@@ -323,9 +322,10 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               </label>
               <GoalSelect
                 id="act-type"
+                placeholder="Selecione a modalidade..."
                 value={watchedActivityType}
                 onChange={(val) =>
-                  setValue('activity_type', val as 'fixed' | 'flexible' | 'habit', {
+                  setValue('activity_type', val, {
                     shouldValidate: true,
                   })
                 }
@@ -335,6 +335,9 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                   { value: 'habit', label: 'Hábito / Meta' },
                 ]}
               />
+              {errors.activity_type && (
+                <p className="text-xs text-text-primary mt-1">⚠ {errors.activity_type.message}</p>
+              )}
             </div>
           </div>
 
@@ -351,6 +354,9 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                 {...register('scheduled_date')}
                 className="w-full px-3 py-2.5 rounded-xl bg-bg-secondary border border-border-subtle text-sm text-text-primary focus:border-text-primary focus:outline-none"
               />
+              {errors.scheduled_date && (
+                <p className="text-xs text-text-primary mt-1">⚠ {errors.scheduled_date.message}</p>
+              )}
             </div>
 
             <div>
@@ -364,6 +370,9 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                 {...register('start_time')}
                 className="w-full px-3 py-2.5 rounded-xl bg-bg-secondary border border-border-subtle text-sm text-text-primary focus:border-text-primary focus:outline-none"
               />
+              {errors.start_time && (
+                <p className="text-xs text-text-primary mt-1">⚠ {errors.start_time.message}</p>
+              )}
             </div>
 
             <div>
@@ -383,7 +392,9 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
           {/* Cálculo automático de duração e validação de intervalo */}
           <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-bg-secondary border border-border-subtle text-xs">
             <span className="text-text-secondary">Duração calculada:</span>
-            {durationMinutes > 0 ? (
+            {!hasTimeFilled ? (
+              <span className="text-text-secondary">Informe início e término</span>
+            ) : durationMinutes > 0 ? (
               <span className="font-mono font-semibold text-text-primary">
                 {formatDuration(durationMinutes)} ({durationMinutes} min)
               </span>

@@ -26,16 +26,26 @@ export const activityFormSchema = z
   .object({
     title: z.string().trim().min(2, 'O título deve ter pelo menos 2 caracteres.'),
     category_id: z.string().min(1, 'Selecione uma categoria.'),
-    scheduled_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida.'),
-    start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Horário inicial inválido.'),
-    end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Horário final inválido.'),
+    scheduled_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Selecione uma data válida.'),
+    start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Informe o horário de início.'),
+    end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Informe o horário de término.'),
     description: z.string().max(500, 'Máximo de 500 caracteres.').optional().or(z.literal('')),
-    activity_type: z.enum(['fixed', 'flexible', 'habit']),
+    activity_type: z
+      .string()
+      .min(1, 'Selecione a modalidade de rotina.')
+      .refine((v) => ['fixed', 'flexible', 'habit'].includes(v), {
+        message: 'Selecione a modalidade de rotina.',
+      }),
     is_recurring: z.boolean().default(false),
     days_of_week: z.array(z.number().min(0).max(6)).default([]),
     recurrence_end_date: z.string().optional().or(z.literal('')),
     reminder_enabled: z.boolean().default(false),
-    reminder_minutes_before: z.coerce.number().min(0).max(1440).default(15),
+    reminder_minutes_before: z.coerce
+      .number()
+      .min(1, 'Selecione a antecedência.')
+      .max(1440)
+      .optional()
+      .default(15),
   })
   .refine(
     (data) => {
@@ -73,7 +83,12 @@ export type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 export const weeklyGoalSchema = z.object({
   title: z.string().trim().min(2, 'Informe um título para a meta.'),
   category_id: z.string().optional().or(z.literal('')),
-  goal_type: z.enum(['frequency', 'duration', 'quantity']),
+  goal_type: z
+    .string()
+    .min(1, 'Selecione o tipo de meta.')
+    .refine((v) => ['frequency', 'duration', 'quantity'].includes(v), {
+      message: 'Selecione o tipo de meta.',
+    }),
   target_value: z.coerce.number().positive('O valor da meta deve ser maior que zero.'),
   unit: z.string().trim().min(1, 'Informe a unidade (ex: vezes, horas, páginas).'),
   description: z.string().max(300).optional().or(z.literal('')),

@@ -57,7 +57,7 @@ export const DashboardPage: React.FC = () => {
   } = useGoalData();
   const { theme } = useTheme();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
 
   // Cores monocromáticas dos gráficos conforme tema Dark ou Light
   const chartColors = useMemo(() => {
@@ -73,7 +73,7 @@ export const DashboardPage: React.FC = () => {
   }, [theme]);
 
   const filteredWeekActivities = useMemo(() => {
-    if (categoryFilter === 'all') return weekActivities;
+    if (!categoryFilter || categoryFilter === 'all') return weekActivities;
     return weekActivities.filter((a) => a.category_id === categoryFilter);
   }, [weekActivities, categoryFilter]);
 
@@ -143,7 +143,7 @@ export const DashboardPage: React.FC = () => {
         (a) =>
           a.scheduled_date >= st &&
           a.scheduled_date <= en &&
-          (categoryFilter === 'all' || a.category_id === categoryFilter)
+          (!categoryFilter || categoryFilter === 'all' || a.category_id === categoryFilter)
       );
 
       const completed = acts.filter((a) => a.status === 'completed').length;
@@ -209,11 +209,14 @@ export const DashboardPage: React.FC = () => {
 
           <GoalSelect
             ariaLabel="Filtrar indicadores e gráficos por categoria"
+            placeholder="Filtrar por categoria..."
             value={categoryFilter}
             onChange={(val) => setCategoryFilter(val)}
             className="min-w-[210px]"
             options={[
-              { value: 'all', label: 'Todas as categorias', icon: 'Layers' },
+              ...(categoryFilter
+                ? [{ value: '', label: 'Limpar filtro (Todas)', icon: 'Layers' }]
+                : []),
               ...categories.map((c) => ({
                 value: c.id,
                 label: c.name,
