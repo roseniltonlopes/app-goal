@@ -27,6 +27,7 @@ import {
 import { useGoalData } from '@/contexts/GoalDataContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CategoryBadge } from '@/components/CategoryIcon';
+import { GoalSelect } from '@/components/GoalSelect';
 import { weeklyGoalSchema, type WeeklyGoalFormValues } from '@/validations/schemas';
 import {
   addDays,
@@ -84,6 +85,7 @@ export const EvolutionPage: React.FC = () => {
   });
 
   const watchedGoalType = watch('goal_type');
+  const watchedGoalCategoryId = watch('category_id') || '';
 
   const openNewGoalModal = () => {
     setEditingGoal(null);
@@ -484,18 +486,19 @@ export const EvolutionPage: React.FC = () => {
                 <label htmlFor="goal-cat" className="block text-xs font-medium text-text-secondary mb-1">
                   Categoria vinculada
                 </label>
-                <select
+                <GoalSelect
                   id="goal-cat"
-                  {...register('category_id')}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-bg-secondary border border-border-subtle text-sm text-text-primary"
-                >
-                  <option value="">Todas as categorias (Geral)</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  value={watchedGoalCategoryId}
+                  onChange={(val) => setValue('category_id', val)}
+                  options={[
+                    { value: '', label: 'Todas as categorias (Geral)', icon: 'Layers' },
+                    ...categories.map((c) => ({
+                      value: c.id,
+                      label: c.name,
+                      icon: c.icon,
+                    })),
+                  ]}
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -503,22 +506,22 @@ export const EvolutionPage: React.FC = () => {
                   <label htmlFor="goal-type" className="block text-xs font-medium text-text-secondary mb-1">
                     Tipo de meta
                   </label>
-                  <select
+                  <GoalSelect
                     id="goal-type"
-                    {...register('goal_type')}
-                    onChange={(e) => {
-                      const val = e.target.value as 'frequency' | 'duration' | 'quantity';
-                      setValue('goal_type', val);
-                      if (val === 'frequency') setValue('unit', 'vezes');
-                      if (val === 'duration') setValue('unit', 'horas');
-                      if (val === 'quantity') setValue('unit', 'sessões');
+                    value={watchedGoalType}
+                    onChange={(val) => {
+                      const typedVal = val as 'frequency' | 'duration' | 'quantity';
+                      setValue('goal_type', typedVal);
+                      if (typedVal === 'frequency') setValue('unit', 'vezes');
+                      if (typedVal === 'duration') setValue('unit', 'horas');
+                      if (typedVal === 'quantity') setValue('unit', 'sessões');
                     }}
-                    className="w-full px-3 py-2.5 rounded-xl bg-bg-secondary border border-border-subtle text-xs text-text-primary"
-                  >
-                    <option value="frequency">Frequência</option>
-                    <option value="duration">Duração (Horas)</option>
-                    <option value="quantity">Quantidade</option>
-                  </select>
+                    options={[
+                      { value: 'frequency', label: 'Frequência' },
+                      { value: 'duration', label: 'Duração (Horas)' },
+                      { value: 'quantity', label: 'Quantidade' },
+                    ]}
+                  />
                 </div>
 
                 <div>

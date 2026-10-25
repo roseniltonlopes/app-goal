@@ -30,6 +30,7 @@ import { useGoalData } from '@/contexts/GoalDataContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CategoryBadge } from '@/components/CategoryIcon';
 import { ActivityModal } from '@/components/ActivityModal';
+import { GoalSelect } from '@/components/GoalSelect';
 import {
   addDays,
   formatDisplayDate,
@@ -206,19 +207,20 @@ export const DashboardPage: React.FC = () => {
             </button>
           </div>
 
-          <select
-            aria-label="Filtrar indicadores e gráficos por categoria"
+          <GoalSelect
+            ariaLabel="Filtrar indicadores e gráficos por categoria"
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-bg-card border border-border-subtle text-xs text-text-primary"
-          >
-            <option value="all">Todas as categorias</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => setCategoryFilter(val)}
+            className="min-w-[210px]"
+            options={[
+              { value: 'all', label: 'Todas as categorias', icon: 'Layers' },
+              ...categories.map((c) => ({
+                value: c.id,
+                label: c.name,
+                icon: c.icon,
+              })),
+            ]}
+          />
 
           <button
             type="button"

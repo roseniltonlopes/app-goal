@@ -23,6 +23,7 @@ import {
   CategoryBadge,
   CategoryIcon,
 } from '@/components/CategoryIcon';
+import { GoalSelect } from '@/components/GoalSelect';
 import { cn } from '@/lib/utils';
 import type { ActivityCategory, CategoryVisualStyle, ThemeMode } from '@/types';
 
@@ -292,34 +293,34 @@ export const SettingsPage: React.FC = () => {
               <label htmlFor="prof-tz" className="block text-xs font-medium text-text-secondary mb-1">
                 Fuso horário (Timezone)
               </label>
-              <select
+              <GoalSelect
                 id="prof-tz"
                 value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-bg-secondary border border-border-subtle text-sm text-text-primary"
-              >
-                <option value="America/Sao_Paulo">America/Sao_Paulo (Brasília - GMT-3)</option>
-                <option value="America/Manaus">America/Manaus (Amazonas - GMT-4)</option>
-                <option value="America/Fortaleza">America/Fortaleza (Nordeste - GMT-3)</option>
-                <option value="America/New_York">America/New_York (EST)</option>
-                <option value="Europe/Lisbon">Europe/Lisbon (Lisboa)</option>
-                <option value="UTC">UTC</option>
-              </select>
+                onChange={(val) => setTimezone(val)}
+                options={[
+                  { value: 'America/Sao_Paulo', label: 'America/Sao_Paulo (Brasília - GMT-3)' },
+                  { value: 'America/Manaus', label: 'America/Manaus (Amazonas - GMT-4)' },
+                  { value: 'America/Fortaleza', label: 'America/Fortaleza (Nordeste - GMT-3)' },
+                  { value: 'America/New_York', label: 'America/New_York (EST)' },
+                  { value: 'Europe/Lisbon', label: 'Europe/Lisbon (Lisboa)' },
+                  { value: 'UTC', label: 'UTC' },
+                ]}
+              />
             </div>
 
             <div>
               <label htmlFor="prof-week" className="block text-xs font-medium text-text-secondary mb-1">
                 Início da semana no calendário
               </label>
-              <select
+              <GoalSelect
                 id="prof-week"
                 value={weekStartsOn}
-                onChange={(e) => setWeekStartsOn(Number(e.target.value) as 0 | 1)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-bg-secondary border border-border-subtle text-sm text-text-primary"
-              >
-                <option value={1}>Segunda-feira (Padrão)</option>
-                <option value={0}>Domingo</option>
-              </select>
+                onChange={(val) => setWeekStartsOn(Number(val) as 0 | 1)}
+                options={[
+                  { value: 1, label: 'Segunda-feira (Padrão)' },
+                  { value: 0, label: 'Domingo' },
+                ]}
+              />
             </div>
 
             <button
@@ -472,17 +473,17 @@ export const SettingsPage: React.FC = () => {
               <label htmlFor="cat-style" className="block text-xs font-medium text-text-secondary mb-1">
                 Preferência visual (Monocromática)
               </label>
-              <select
+              <GoalSelect
                 id="cat-style"
                 value={catStyle}
-                onChange={(e) => setCatStyle(e.target.value as CategoryVisualStyle)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-bg-secondary border border-border-subtle text-xs text-text-primary"
-              >
-                <option value="solid">Sólido (Alto contraste)</option>
-                <option value="outline">Contorno (Minimalista)</option>
-                <option value="subtle">Suave (Superfície discreta)</option>
-                <option value="striped">Listrado sutil</option>
-              </select>
+                onChange={(val) => setCatStyle(val as CategoryVisualStyle)}
+                options={[
+                  { value: 'solid', label: 'Sólido (Alto contraste)' },
+                  { value: 'outline', label: 'Contorno (Minimalista)' },
+                  { value: 'subtle', label: 'Suave (Superfície discreta)' },
+                  { value: 'striped', label: 'Listrado sutil' },
+                ]}
+              />
             </div>
 
             <div className="flex items-center gap-2 pt-2">
@@ -655,19 +656,19 @@ export const SettingsPage: React.FC = () => {
                 >
                   Antecedência padrão dos lembretes
                 </label>
-                <select
+                <GoalSelect
                   id="wa-advance"
                   value={defaultReminderMinutes}
-                  onChange={(e) => setDefaultReminderMinutes(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 rounded-xl bg-bg-secondary border border-border-subtle text-xs text-text-primary"
-                >
-                  <option value={5}>5 minutos antes</option>
-                  <option value={10}>10 minutos antes</option>
-                  <option value={15}>15 minutos antes</option>
-                  <option value={30}>30 minutos antes</option>
-                  <option value={60}>1 hora antes</option>
-                  <option value={120}>2 horas antes</option>
-                </select>
+                  onChange={(val) => setDefaultReminderMinutes(Number(val))}
+                  options={[
+                    { value: 5, label: '5 minutos antes' },
+                    { value: 10, label: '10 minutos antes' },
+                    { value: 15, label: '15 minutos antes' },
+                    { value: 30, label: '30 minutos antes' },
+                    { value: 60, label: '1 hora antes' },
+                    { value: 120, label: '2 horas antes' },
+                  ]}
+                />
               </div>
 
               <div>

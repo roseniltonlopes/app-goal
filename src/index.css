@@ -71,6 +71,50 @@
     outline: 2px solid var(--text-primary);
     outline-offset: 2px;
   }
+
+  /* Padronização progressiva de <select> nativo via appearance: base-select (modern-web-guidance: branded-select-styling) */
+  @supports (appearance: base-select) {
+    select,
+    select::picker(select) {
+      appearance: base-select;
+    }
+
+    select::picker(select) {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-strong);
+      border-radius: 0.75rem;
+      padding: 0.375rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    select::picker-icon {
+      color: var(--text-secondary);
+    }
+
+    select option {
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      color: var(--text-primary);
+      background-color: transparent;
+      cursor: pointer;
+    }
+
+    select option:hover,
+    select option:focus {
+      background-color: var(--bg-secondary);
+    }
+
+    select option:checked {
+      background-color: var(--text-primary);
+      color: var(--bg-primary);
+      font-weight: 600;
+    }
+
+    select option::checkmark {
+      color: currentColor;
+    }
+  }
 }
 
 /* Padrão listrado monocromático sutil para diferenciar categorias sem cores vibrantes */

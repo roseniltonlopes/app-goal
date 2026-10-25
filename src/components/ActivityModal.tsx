@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { activityFormSchema, type ActivityFormValues } from '@/validations/schemas';
 import { useGoalData } from '@/contexts/GoalDataContext';
+import { GoalSelect } from '@/components/GoalSelect';
 import {
   calculateDurationMinutes,
   formatDuration,
@@ -138,12 +139,15 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
 
   if (!isOpen) return null;
 
+  const watchedCategoryId = watch('category_id');
+  const watchedActivityType = watch('activity_type');
   const watchedDate = watch('scheduled_date');
   const watchedStart = watch('start_time');
   const watchedEnd = watch('end_time');
   const watchedRecurring = watch('is_recurring');
   const watchedDays = watch('days_of_week') || [];
   const watchedReminder = watch('reminder_enabled');
+  const watchedReminderMinutes = watch('reminder_minutes_before');
 
   const durationMinutes = calculateDurationMinutes(watchedStart || '00:00', watchedEnd || '00:00');
 
@@ -298,17 +302,16 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               <label htmlFor="act-category" className="block text-xs font-medium text-text-secondary mb-1">
                 Categoria *
               </label>
-              <select
+              <GoalSelect
                 id="act-category"
-                {...register('category_id')}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-bg-secondary border border-border-subtle text-sm text-text-primary focus:border-text-primary focus:outline-none"
-              >
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+                value={watchedCategoryId}
+                onChange={(val) => setValue('category_id', val, { shouldValidate: true })}
+                options={categories.map((cat) => ({
+                  value: cat.id,
+                  label: cat.name,
+                  icon: cat.icon,
+                }))}
+              />
               {errors.category_id && (
                 <p className="text-xs text-text-primary mt-1">⚠ {errors.category_id.message}</p>
               )}
@@ -318,15 +321,20 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               <label htmlFor="act-type" className="block text-xs font-medium text-text-secondary mb-1">
                 Modalidade de rotina *
               </label>
-              <select
+              <GoalSelect
                 id="act-type"
-                {...register('activity_type')}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-bg-secondary border border-border-subtle text-sm text-text-primary focus:border-text-primary focus:outline-none"
-              >
-                <option value="fixed">Compromisso fixo</option>
-                <option value="flexible">Atividade flexível</option>
-                <option value="habit">Hábito / Meta</option>
-              </select>
+                value={watchedActivityType}
+                onChange={(val) =>
+                  setValue('activity_type', val as 'fixed' | 'flexible' | 'habit', {
+                    shouldValidate: true,
+                  })
+                }
+                options={[
+                  { value: 'fixed', label: 'Compromisso fixo' },
+                  { value: 'flexible', label: 'Atividade flexível' },
+                  { value: 'habit', label: 'Hábito / Meta' },
+                ]}
+              />
             </div>
           </div>
 
@@ -525,22 +533,27 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
             </div>
 
             {watchedReminder && (
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center justify-between pt-1 gap-3">
                 <label htmlFor="act-rem-min" className="text-xs text-text-secondary">
                   Antecedência do lembrete:
                 </label>
-                <select
+                <GoalSelect
                   id="act-rem-min"
-                  {...register('reminder_minutes_before')}
-                  className="px-3 py-1.5 rounded-lg bg-bg-card border border-border-subtle text-xs text-text-primary"
-                >
-                  <option value={5}>5 minutos antes</option>
-                  <option value={10}>10 minutos antes</option>
-                  <option value={15}>15 minutos antes</option>
-                  <option value={30}>30 minutos antes</option>
-                  <option value={60}>1 hora antes</option>
-                  <option value={120}>2 horas antes</option>
-                </select>
+                  size="sm"
+                  className="min-w-[175px]"
+                  value={watchedReminderMinutes}
+                  onChange={(val) =>
+                    setValue('reminder_minutes_before', Number(val), { shouldValidate: true })
+                  }
+                  options={[
+                    { value: 5, label: '5 minutos antes' },
+                    { value: 10, label: '10 minutos antes' },
+                    { value: 15, label: '15 minutos antes' },
+                    { value: 30, label: '30 minutos antes' },
+                    { value: 60, label: '1 hora antes' },
+                    { value: 120, label: '2 horas antes' },
+                  ]}
+                />
               </div>
             )}
           </div>

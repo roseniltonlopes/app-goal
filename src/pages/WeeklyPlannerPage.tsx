@@ -19,6 +19,7 @@ import { CategoryBadge } from '@/components/CategoryIcon';
 import { ActivityModal } from '@/components/ActivityModal';
 import { RescheduleModal } from '@/components/RescheduleModal';
 import { DeleteConfirmModal } from '@/components/DeleteConfirmModal';
+import { GoalSelect } from '@/components/GoalSelect';
 import {
   addDays,
   formatDateISO,
@@ -215,31 +216,35 @@ export const WeeklyPlannerPage: React.FC = () => {
             <span>Filtros:</span>
           </div>
 
-          <select
-            aria-label="Filtrar por categoria"
+          <GoalSelect
+            ariaLabel="Filtrar por categoria"
+            size="sm"
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-bg-secondary border border-border-subtle text-xs text-text-primary"
-          >
-            <option value="all">Todas as categorias</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => setCategoryFilter(val)}
+            className="min-w-[200px]"
+            options={[
+              { value: 'all', label: 'Todas as categorias', icon: 'Layers' },
+              ...categories.map((cat) => ({
+                value: cat.id,
+                label: cat.name,
+                icon: cat.icon,
+              })),
+            ]}
+          />
 
-          <select
-            aria-label="Filtrar por status"
+          <GoalSelect
+            ariaLabel="Filtrar por status"
+            size="sm"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-bg-secondary border border-border-subtle text-xs text-text-primary"
-          >
-            <option value="all">Todos os status</option>
-            <option value="pending">Pendentes</option>
-            <option value="completed">Concluídas</option>
-            <option value="missed">Não realizadas</option>
-          </select>
+            onChange={(val) => setStatusFilter(val)}
+            className="min-w-[165px]"
+            options={[
+              { value: 'all', label: 'Todos os status' },
+              { value: 'pending', label: 'Pendentes' },
+              { value: 'completed', label: 'Concluídas' },
+              { value: 'missed', label: 'Não realizadas' },
+            ]}
+          />
         </div>
 
         <div className="flex items-center gap-4 text-xs text-text-secondary">
