@@ -41,7 +41,7 @@ export const App: React.FC = () => {
     <ThemeProvider>
       <AuthProvider>
         <GoalDataProvider>
-          <BrowserRouter>
+          <BrowserRouter basename={import.meta.env.BASE_URL}>
             <Routes>
               <Route path="/auth" element={<AuthPage />} />
               <Route

@@ -14,6 +14,7 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
+  Database,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -24,6 +25,7 @@ import {
   CategoryIcon,
 } from '@/components/CategoryIcon';
 import { GoalSelect } from '@/components/GoalSelect';
+import { SupabaseConnectModal } from '@/components/SupabaseConnectModal';
 import { cn } from '@/lib/utils';
 import type { ActivityCategory, CategoryVisualStyle, ThemeMode } from '@/types';
 
@@ -73,6 +75,7 @@ export const SettingsPage: React.FC = () => {
   const [quietHoursEnd, setQuietHoursEnd] = useState('');
   const [isSavingWhatsApp, setIsSavingWhatsApp] = useState(false);
   const [isTriggeringCheck, setIsTriggeringCheck] = useState(false);
+  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -436,6 +439,27 @@ export const SettingsPage: React.FC = () => {
                 </div>
               </div>
             </div>
+            {/* Conexão com Projeto Supabase Real */}
+            <div className="p-4 rounded-xl bg-bg-secondary border border-border-subtle flex items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <span className="text-xs font-semibold text-text-primary flex items-center gap-1.5">
+                  <Database className="w-3.5 h-3.5" />
+                  Banco de Dados Supabase
+                </span>
+                <p className="text-[11px] text-text-secondary">
+                  {isRemoteSupabase
+                    ? 'Conectado à sua instância Supabase Cloud.'
+                    : 'Operando no banco local. Conecte sua URL e Anon Key do Supabase quando desejar.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSupabaseModalOpen(true)}
+                className="px-3.5 py-2 rounded-xl bg-text-primary text-bg-primary text-xs font-semibold hover:opacity-90 shrink-0"
+              >
+                {isRemoteSupabase ? 'Gerenciar Conexão' : 'Conectar Supabase'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -591,6 +615,27 @@ export const SettingsPage: React.FC = () => {
                   </div>
                 </div>
               ))}
+            </div>
+            {/* Conexão com Projeto Supabase Real */}
+            <div className="p-4 rounded-xl bg-bg-secondary border border-border-subtle flex items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <span className="text-xs font-semibold text-text-primary flex items-center gap-1.5">
+                  <Database className="w-3.5 h-3.5" />
+                  Banco de Dados Supabase
+                </span>
+                <p className="text-[11px] text-text-secondary">
+                  {isRemoteSupabase
+                    ? 'Conectado à sua instância Supabase Cloud.'
+                    : 'Operando no banco local. Conecte sua URL e Anon Key do Supabase quando desejar.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSupabaseModalOpen(true)}
+                className="px-3.5 py-2 rounded-xl bg-text-primary text-bg-primary text-xs font-semibold hover:opacity-90 shrink-0"
+              >
+                {isRemoteSupabase ? 'Gerenciar Conexão' : 'Conectar Supabase'}
+              </button>
             </div>
           </div>
         </div>
@@ -879,9 +924,35 @@ export const SettingsPage: React.FC = () => {
                 )}
               </div>
             </div>
+            {/* Conexão com Projeto Supabase Real */}
+            <div className="p-4 rounded-xl bg-bg-secondary border border-border-subtle flex items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <span className="text-xs font-semibold text-text-primary flex items-center gap-1.5">
+                  <Database className="w-3.5 h-3.5" />
+                  Banco de Dados Supabase
+                </span>
+                <p className="text-[11px] text-text-secondary">
+                  {isRemoteSupabase
+                    ? 'Conectado à sua instância Supabase Cloud.'
+                    : 'Operando no banco local. Conecte sua URL e Anon Key do Supabase quando desejar.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSupabaseModalOpen(true)}
+                className="px-3.5 py-2 rounded-xl bg-text-primary text-bg-primary text-xs font-semibold hover:opacity-90 shrink-0"
+              >
+                {isRemoteSupabase ? 'Gerenciar Conexão' : 'Conectar Supabase'}
+              </button>
+            </div>
           </div>
         </div>
       )}
+
+      <SupabaseConnectModal
+        isOpen={isSupabaseModalOpen}
+        onClose={() => setIsSupabaseModalOpen(false)}
+      />
     </div>
   );
 };

@@ -16,6 +16,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { goalRepository } from '@/services/goalRepository';
+import { SupabaseConnectModal } from '@/components/SupabaseConnectModal';
 import {
   loginSchema,
   registerSchema,
@@ -38,6 +39,7 @@ export const AuthPage: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localResetPassword, setLocalResetPassword] = useState('');
+  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
 
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -181,10 +183,16 @@ export const AuthPage: React.FC = () => {
 
         <div className="flex items-center justify-between text-xs text-text-secondary pt-4 border-t border-border-subtle">
           <span>GOAL © {new Date().getFullYear()}</span>
-          <span className="inline-flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setIsSupabaseModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-bg-card border border-border-subtle hover:border-border-strong text-text-primary transition-colors"
+          >
             <Database className="w-3.5 h-3.5" />
-            {isRemoteSupabase ? 'Supabase Cloud Ativo' : 'Banco Persistente Local Ativo'}
-          </span>
+            <span>
+              {isRemoteSupabase ? 'Supabase Cloud Conectado' : 'Conectar Supabase'}
+            </span>
+          </button>
         </div>
       </div>
 
@@ -499,8 +507,27 @@ export const AuthPage: React.FC = () => {
               </div>
             </form>
           )}
+          <div className="pt-2 border-t border-border-subtle flex items-center justify-between text-[11px] text-text-secondary">
+            <span>
+              {isRemoteSupabase
+                ? 'Sincronizado com seu projeto Supabase'
+                : 'Executando em persistência local'}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsSupabaseModalOpen(true)}
+              className="font-medium text-text-primary underline hover:opacity-80"
+            >
+              {isRemoteSupabase ? 'Configurar conexão' : 'Conectar Supabase'}
+            </button>
+          </div>
         </div>
       </div>
+
+      <SupabaseConnectModal
+        isOpen={isSupabaseModalOpen}
+        onClose={() => setIsSupabaseModalOpen(false)}
+      />
     </div>
   );
 };
