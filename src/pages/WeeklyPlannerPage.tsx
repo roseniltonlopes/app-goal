@@ -71,8 +71,8 @@ export const WeeklyPlannerPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<ScheduledActivity | null>(null);
   const [modalInitialDate, setModalInitialDate] = useState<string | undefined>(undefined);
-  const [modalInitialStart, setModalInitialStart] = useState<string>('08:00');
-  const [modalInitialEnd, setModalInitialEnd] = useState<string>('09:00');
+  const [modalInitialStart, setModalInitialStart] = useState<string>('');
+  const [modalInitialEnd, setModalInitialEnd] = useState<string>('');
 
   const [reschedulingActivity, setReschedulingActivity] = useState<ScheduledActivity | null>(null);
   const [deletingActivity, setDeletingActivity] = useState<ScheduledActivity | null>(null);
@@ -101,13 +101,16 @@ export const WeeklyPlannerPage: React.FC = () => {
     return set;
   }, [weekActivities]);
 
-  const openCreateAtSlot = (dateISO: string, startHHMM = '08:00') => {
-    const [h, m] = startHHMM.split(':').map(Number);
-    const endHour = Math.min(23, h + 1);
-    const endHHMM = `${String(endHour).padStart(2, '0')}:${String(m || 0).padStart(2, '0')}`;
+  const openCreateAtSlot = (dateISO = '', startHHMM = '') => {
+    let endHHMM = '';
+    if (startHHMM) {
+      const [h, m] = startHHMM.split(':').map(Number);
+      const endHour = Math.min(23, h + 1);
+      endHHMM = `${String(endHour).padStart(2, '0')}:${String(m || 0).padStart(2, '0')}`;
+    }
 
     setEditingActivity(null);
-    setModalInitialDate(dateISO);
+    setModalInitialDate(dateISO || undefined);
     setModalInitialStart(startHHMM);
     setModalInitialEnd(endHHMM);
     setIsModalOpen(true);
@@ -318,7 +321,7 @@ export const WeeklyPlannerPage: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => openCreateAtSlot(dayISO, '08:00')}
+                      onClick={() => openCreateAtSlot(dayISO, '')}
                       title="Adicionar atividade neste dia"
                       aria-label={`Adicionar atividade em ${dayISO}`}
                       className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-card"
@@ -333,7 +336,7 @@ export const WeeklyPlannerPage: React.FC = () => {
                   {dayActs.length === 0 ? (
                     <button
                       type="button"
-                      onClick={() => openCreateAtSlot(dayISO, '09:00')}
+                      onClick={() => openCreateAtSlot(dayISO, '')}
                       className="w-full h-32 rounded-xl border border-dashed border-border-subtle hover:border-border-strong flex flex-col items-center justify-center gap-1 text-text-secondary hover:text-text-primary transition-colors text-xs"
                     >
                       <Plus className="w-4 h-4" />

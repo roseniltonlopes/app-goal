@@ -11,12 +11,10 @@ import {
   User as UserIcon,
   CheckCircle2,
   AlertTriangle,
-  Database,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { goalRepository } from '@/services/goalRepository';
-import { SupabaseConnectModal } from '@/components/SupabaseConnectModal';
 import {
   loginSchema,
   registerSchema,
@@ -39,7 +37,6 @@ export const AuthPage: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localResetPassword, setLocalResetPassword] = useState('');
-  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
 
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -111,94 +108,44 @@ export const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-bg-primary text-text-primary">
-      {/* Coluna Institucional / Manifesto GOAL */}
-      <div className="lg:w-1/2 p-8 sm:p-12 lg:p-16 flex flex-col justify-between bg-bg-secondary border-b lg:border-b-0 lg:border-r border-border-subtle">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-text-primary text-bg-primary flex items-center justify-center font-bold text-xl">
-              G
-            </div>
-            <div>
-              <span className="text-xl font-bold tracking-tight block leading-none">GOAL</span>
-              <span className="text-xs text-text-secondary">
-                Planeje melhor. Viva com intenção.
-              </span>
-            </div>
+    <div className="min-h-screen flex flex-col justify-between bg-bg-primary text-text-primary px-4 py-6 sm:px-8">
+      {/* Topo Minimalista: Logo + Alternância de Tema */}
+      <header className="w-full max-w-md mx-auto flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-text-primary text-bg-primary flex items-center justify-center font-bold text-lg">
+            G
           </div>
-
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border-subtle bg-bg-card text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
-          >
-            {theme === 'dark' ? (
-              <>
-                <Sun className="w-4 h-4" />
-                <span>Light Mode</span>
-              </>
-            ) : (
-              <>
-                <Moon className="w-4 h-4" />
-                <span>Dark Mode</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        <div className="my-10 lg:my-0 max-w-lg space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bg-card border border-border-subtle text-xs text-text-secondary">
-            <span>Planejamento Semanal Pessoal & Equilíbrio</span>
-          </div>
-
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
-            Planeje melhor.{' '}
-            <span className="text-text-secondary block mt-1">Viva com intenção.</span>
-          </h1>
-
-          <p className="text-sm sm:text-base text-text-secondary leading-relaxed">
-            Organize trabalho, academia, estudos, família, leitura e espiritualidade em um único
-            ambiente minimalista. Acompanhe o que foi planejado versus o que foi realizado com
-            clareza e constância.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            {[
-              'Agenda semanal com recorrência inteligente',
-              'Visão Meu Dia com ações rápidas',
-              'Metas semanais por frequência ou horas',
-              'Indicadores reais e lembretes WhatsApp',
-            ].map((feature) => (
-              <div
-                key={feature}
-                className="flex items-center gap-2.5 p-3 rounded-xl bg-bg-card border border-border-subtle text-xs text-text-primary"
-              >
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-text-primary" />
-                <span>{feature}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between text-xs text-text-secondary pt-4 border-t border-border-subtle">
-          <span>GOAL © {new Date().getFullYear()}</span>
-          <button
-            type="button"
-            onClick={() => setIsSupabaseModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-bg-card border border-border-subtle hover:border-border-strong text-text-primary transition-colors"
-          >
-            <Database className="w-3.5 h-3.5" />
-            <span>
-              {isRemoteSupabase ? 'Supabase Cloud Conectado' : 'Conectar Supabase'}
+          <div>
+            <span className="text-lg font-bold tracking-tight block leading-none">GOAL</span>
+            <span className="text-[11px] text-text-secondary">
+              Planeje melhor. Viva com intenção.
             </span>
-          </button>
+          </div>
         </div>
-      </div>
 
-      {/* Coluna de Autenticação */}
-      <div className="lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-md bg-bg-card border border-border-strong rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
+          className="p-2 rounded-xl border border-border-subtle bg-bg-card text-text-secondary hover:text-text-primary transition-colors"
+        >
+          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </button>
+      </header>
+
+      {/* Centro: Resumo Curto + Card Único de Login / Cadastro */}
+      <main className="w-full max-w-md mx-auto my-8 space-y-5">
+        <div className="text-center space-y-1.5 px-2">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
+            Planeje melhor. Viva com intenção.
+          </h1>
+          <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
+            Organize sua rotina semanal, acompanhe hábitos e metas e evolua com equilíbrio em um
+            único lugar.
+          </p>
+        </div>
+
+        <div className="w-full bg-bg-card border border-border-strong rounded-2xl p-6 sm:p-7 space-y-5 shadow-xl">
           {/* Abas Login / Cadastro */}
           <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-bg-secondary border border-border-subtle">
             <button
@@ -228,15 +175,14 @@ export const AuthPage: React.FC = () => {
           </div>
 
           <div>
-            <h2 className="text-xl font-bold text-text-primary">
-              {mode === 'login' && 'Acesse sua semana'}
-              {mode === 'register' && 'Comece a planejar com intenção'}
-              {mode === 'forgot' && 'Recuperar acesso'}
+            <h2 className="text-lg font-bold text-text-primary">
+              {mode === 'login' && 'Acesse sua conta'}
+              {mode === 'register' && 'Crie sua conta gratuita'}
+              {mode === 'forgot' && 'Recuperar senha'}
             </h2>
-            <p className="text-xs text-text-secondary mt-1">
-              {mode === 'login' && 'Entre com seu e-mail e senha para carregar seus dados.'}
-              {mode === 'register' &&
-                'Sua conta já virá configurada com as 9 categorias oficiais do GOAL.'}
+            <p className="text-xs text-text-secondary mt-0.5">
+              {mode === 'login' && 'Informe seu e-mail e senha para continuar.'}
+              {mode === 'register' && 'Preencha seus dados para iniciar seu planejamento.'}
               {mode === 'forgot' && 'Informe seu e-mail cadastrado para redefinir sua senha.'}
             </p>
           </div>
@@ -328,7 +274,7 @@ export const AuthPage: React.FC = () => {
                 disabled={isSubmitting}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-text-primary text-bg-primary text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                <span>{isSubmitting ? 'Autenticando...' : 'Entrar no GOAL'}</span>
+                <span>{isSubmitting ? 'Autenticando...' : 'Entrar'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -507,27 +453,12 @@ export const AuthPage: React.FC = () => {
               </div>
             </form>
           )}
-          <div className="pt-2 border-t border-border-subtle flex items-center justify-between text-[11px] text-text-secondary">
-            <span>
-              {isRemoteSupabase
-                ? 'Sincronizado com seu projeto Supabase'
-                : 'Executando em persistência local'}
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsSupabaseModalOpen(true)}
-              className="font-medium text-text-primary underline hover:opacity-80"
-            >
-              {isRemoteSupabase ? 'Configurar conexão' : 'Conectar Supabase'}
-            </button>
-          </div>
         </div>
-      </div>
+      </main>
 
-      <SupabaseConnectModal
-        isOpen={isSupabaseModalOpen}
-        onClose={() => setIsSupabaseModalOpen(false)}
-      />
+      <footer className="w-full max-w-md mx-auto text-center text-[11px] text-text-secondary">
+        GOAL © {new Date().getFullYear()} — Planejamento Semanal Pessoal
+      </footer>
     </div>
   );
 };
