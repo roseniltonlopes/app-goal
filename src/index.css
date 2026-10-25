@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Paleta Monocromática Oficial do GOAL:
+     - Preto: #000000
+     - Branco: #FFFFFF
+     - Cinza-claro: #C9CAC5
+     - Cinza-escuro: #272726
+     - Preto-suave: #171716
+  */
+
+  :root,
+  html.dark {
+    color-scheme: dark;
+    --bg-primary: #000000;
+    --bg-secondary: #171716;
+    --bg-card: #272726;
+    --bg-elevated: #171716;
+    --text-primary: #FFFFFF;
+    --text-secondary: #C9CAC5;
+    --text-muted: #9E9F9A;
+    --text-inverse: #000000;
+    --border-subtle: #272726;
+    --border-strong: #C9CAC5;
+  }
+
+  html.light {
+    color-scheme: light;
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F3F3F1;
+    --bg-card: #FFFFFF;
+    --bg-elevated: #E8E8E4;
+    --text-primary: #000000;
+    --text-secondary: #272726;
+    --text-muted: #52524F;
+    --text-inverse: #FFFFFF;
+    --border-subtle: #C9CAC5;
+    --border-strong: #272726;
+  }
+
+  /* Mapeia meta[name="color-scheme"] conforme diretriz modern-web-guidance */
+  :root:has(> head > meta[name="color-scheme"][content="dark"]) {
+    color-scheme: dark;
+  }
+  :root:has(> head > meta[name="color-scheme"][content="light"]) {
+    color-scheme: light;
+  }
+
+  /* Suporte a Forced Colors Mode (High Contrast) */
+  @media (forced-colors: active) {
+    :root {
+      --border-subtle: CanvasText;
+      --border-strong: Highlight;
+    }
+  }
+
+  * {
+    border-color: var(--border-subtle);
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Estados de foco acessíveis em teclado */
+  :focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+  }
+}
+
+/* Padrão listrado monocromático sutil para diferenciar categorias sem cores vibrantes */
+.pattern-striped {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 6px,
+    rgba(201, 202, 197, 0.08) 6px,
+    rgba(201, 202, 197, 0.08) 12px
+  );
+}
+
+html.light .pattern-striped {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 6px,
+    rgba(39, 39, 38, 0.06) 6px,
+    rgba(39, 39, 38, 0.06) 12px
+  );
+}
+
+/* Scrollbar minimalista */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
