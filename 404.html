@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <title>GOAL — Planeje melhor. Viva com intenção.</title>
+    <script>
+      try {
+        var storedTheme = localStorage.getItem('goal_theme') || 'dark';
+        var root = document.documentElement;
+        if (storedTheme === 'light') {
+          root.classList.remove('dark');
+          root.classList.add('light');
+          document.querySelector('meta[name="color-scheme"]').content = 'light';
+        } else {
+          root.classList.remove('light');
+          root.classList.add('dark');
+          document.querySelector('meta[name="color-scheme"]').content = 'dark';
+        }
+      } catch (e) {}
+    </script>
+    <script type="module" crossorigin src="/app-goal/assets/index-AYQjpm-c.js"></script>
+    <link rel="stylesheet" crossorigin href="/app-goal/assets/index-CVlwVove.css">
+  </head>
+  <body class="bg-bg-primary text-text-primary antialiased selection:bg-text-primary selection:text-bg-primary overflow-x-hidden">
+    <div id="root"></div>
+  </body>
+</html>
